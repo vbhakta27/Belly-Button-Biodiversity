@@ -21,12 +21,12 @@ function PopulateDropDownList() {
       // Set subject ID in value property
       option.value = subject;
       // Add the option element to DropDownList
-      ddlIDs.options.add(option); 
+      ddlIDs.options.add(option);
     })
     // Get the first subject ID for the initial plots
     optionChanged(subjectsIDs[0])
   })
-  
+
 };
 
 
@@ -71,13 +71,13 @@ function getData(subjectID, counter) {
       // Build initial demo 
       buildDemo(metadata)
       // Build initial plots
-      buildPlots(otu_ids, sample_values, otu_labels);
+      buildPlots(otu_ids, sample_values, otu_labels, metadata);
     }
     else {
       // Build initial demo 
       buildDemo(metadata)
       // Call function to build plots
-      updatePlots(otu_ids, sample_values, otu_labels);
+      updatePlots(otu_ids, sample_values, otu_labels), metadata;
 
     }
   })
@@ -99,7 +99,7 @@ function buildDemo(metadata) {
 
 
 // FUNCTION TO BUILD INITIAL PLOTS
-function buildPlots(otu_ids, sample_values, otu_labels) {
+function buildPlots(otu_ids, sample_values, otu_labels, metadata) {
   // Adds a OTU string before each id
   otu_ids_string = otu_ids.map(i => 'OTU ' + i);
 
@@ -134,7 +134,7 @@ function buildPlots(otu_ids, sample_values, otu_labels) {
     marker: {
       color: otu_ids,
       size: sample_values
-    }
+    },
   };
 
   // Create the data array for the plot
@@ -148,12 +148,81 @@ function buildPlots(otu_ids, sample_values, otu_labels) {
 
   // Plot the chart to a div tag with id "bubble"
   Plotly.newPlot("bubble", data, layout);
+
+
+  // CREATE GUAGE CHART
+  // https://com2m.de/blog/technology/gauge-charts-with-plotly/
+  // Need to multiply by 20 since we have 9 scrubs per week max and we need 180 degress for total
+  var level = 20 * metadata.wfreq
+
+  // Trig to calc meter point
+  var degrees = 180 - level,
+    radius = .25;
+  var radians = degrees * Math.PI / 180;
+  var aX = 0.025 * Math.cos((degrees - 90) * Math.PI / 180)+.5;
+  var aY = 0.025 * Math.sin((degrees - 90) * Math.PI / 180)+.5;
+  var bX = -0.025 * Math.cos((degrees - 90) * Math.PI / 180)+.5;
+  var bY = -0.025 * Math.sin((degrees - 90) * Math.PI / 180)+.5;
+  var cX = radius * Math.cos(radians)+.5;
+  var cY = radius * Math.sin(radians)+.5;
+
+  var path = 'M ' + aX + ' ' + aY +
+    ' L ' + bX + ' ' + bY +
+    ' L ' + cX + ' ' + cY +
+    ' Z';
+  var data = [
+    {
+      values: [81 / 9, 81 / 9, 81 / 9, 81 / 9, 81 / 9, 81 / 9, 81 / 9, 81 / 9, 81 / 9, 81],
+      rotation: 90,
+      text: ['8-9', '7-8', '6-7', '5-6', '4-5', '3-4', '2-3', '1-2', '0-1', ''],
+      textinfo: 'text',
+      textposition: 'inside',
+      marker: {
+        colors: ['rgb(0,68,27)', 'rgb(0,109,44)','rgb(35,139,69)','rgb(65,171,93)','rgb(116,196,118)','rgb(161,217,155',
+        'rgb(199,233,192)','rgb(229,245,224)','rgb(247,252,245)']
+      },
+      hoverinfo: 'text',
+      hole: .5,
+      type: 'pie',
+      showlegend: false
+    }
+  ];
+
+  var layout = {
+    title: "Belly Button Washing Frequency <br><sub>Scrubs per Week</sub>" ,
+    shapes: [{
+      type: 'path',
+      path: path,
+      fillcolor: '850000',
+      line: {
+        color: '850000'
+      }
+    }],
+    height: 400,
+    width: 400,
+    xaxis: {
+      zeroline: false,
+      showticklabels: false,
+      showgrid: false,
+      fixedrange: true,
+      range: [-1,1]
+    },
+    yaxis: {
+      zeroline: false,
+      showticklabels: false,
+      showgrid: false,
+      fixedrange: true,
+      range: [-1,1]
+    }
+  };
+
+  Plotly.newPlot("gauge", data, layout);
 };
 
 
 
 // FUNCTION TO UPDATE ALREADY BUILT PLOTS
-function updatePlots(otu_ids, sample_values, otu_labels) {
+function updatePlots(otu_ids, sample_values, otu_labels, metadata) {
 
   // Add a OTU string before each id
   otu_ids_string = otu_ids.map(i => 'OTU ' + i);
